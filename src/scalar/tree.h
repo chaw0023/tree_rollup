@@ -1,9 +1,15 @@
 #include <iostream>
 #include <vector>
 #include <time.h>
+#include <unordered_map>
 
-#define MAX_WEIGHT 1000
+#define MAX_WEIGHT 2
 #define SEED MAX_WEIGHT
+
+class Node;
+
+std::unordered_map<Node*, int> leafnodes;
+std::vector<Node*> leaves_vector;
 
 class Node
 {
@@ -18,14 +24,16 @@ public:
             name = name_;
             // printf("Added node with id = %d\t, weight = %.2f\n", node_id, wt);
           };
-  ~Node(){};
+  ~Node(){printf("Destroying tree with %i elements!!\n", id_counter);};
   std::vector<Node*> children;
   Node* parent;
   float added_weight;
   float get_weight();
+  int get_id();
   bool add_weight(float wt);
   std::string name;
-  void add_random_children_to_node(int n);
+  void add_random_children_to_node(int n = 1);
+  Node* add_random_child_to_node();
   void add_children_to_node(int n, float init_wt);
   void add_children_to_node(int n, float init_wt[]) {}; //Unimplemented
   void rollup_weight(float wt);
