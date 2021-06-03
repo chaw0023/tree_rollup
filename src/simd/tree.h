@@ -10,6 +10,13 @@ class Node;
 
 std::unordered_map<Node*, int> leafnodes;
 std::vector<Node*> leaves_vector;
+std::vector<std::vector<Node*>> ancestor_of_leaves;
+std::vector<std::vector<float*>> ancestor_weights_of_leaves;
+
+struct Leaf{
+  std::vector<std::vector<Node*>> ancestors_deposited_wt;
+  std::vector<Node*> ancestors;
+};
 
 class Node
 {
@@ -26,6 +33,8 @@ public:
           };
   ~Node(){printf("Destroying tree with %i elements!!\n", id_counter);};
   std::vector<Node*> children;
+  std::vector<Node*> list_of_leaves_mapped;
+  std::vector<float> deposited_weight;
   Node* parent;
   float added_weight;
   float get_weight();

@@ -1,6 +1,3 @@
-#include <iostream>
-#include <vector>
-
 #include "tree.h"
 
 int Node::id_counter = 0;
@@ -61,6 +58,18 @@ void create_simple_tree(Node* root, int n_children_per_node, int levels){
       if(levels==1){
         leafnodes.insert({new_child, new_child->get_id()});
         leaves_vector.push_back(new_child);
+        Node* ancestor = new_child->parent;
+        float* ancestor_wt;
+        ancestor_wt = &(ancestor->added_weight);
+        std::vector<Node*> node_vector;
+        std::vector<float*> wt_vector;
+        while(ancestor!=NULL){
+          node_vector.push_back(ancestor);
+          wt_vector.push_back(&(ancestor->added_weight));
+          ancestor = ancestor->parent;
+        }
+        ancestor_of_leaves.push_back(node_vector);
+        ancestor_weights_of_leaves.push_back(wt_vector);
         // Node::leafnodes[new_child->get_id()] = new_child;
         continue;
       }
@@ -77,6 +86,22 @@ void print_tree(Node* node){
   for(auto child: node->children)
     print_tree(child);
 }
+
+void print_node_and_ancestors(int leaf_idx){  //Leaf function
+  std::string name_of_node="";
+  for(auto l : ancestor_of_leaves[leaf_idx]){
+    name_of_node += std::to_string(l->get_id());
+    std::cout<<name_of_node <<" = "<<l->get_weight()<<"\n";
+    name_of_node += ".";
+  }
+}
+
+void deposit_weights_to_ancestors(int lead_node_idx, float wt){ //Leaf function
+  //this type of loop is vetorization friendly. For MIMD *p could be 'gathered' over all threads before updating values.
+  for(float* p : ancestor_weights_of_leaves[lead_node_idx]){
+    *p = *p + wt;
+  }
+}
 /***main function
   creates a simple tree then adds random weights to leaf that roll up.
 **/
@@ -91,19 +116,22 @@ int main(int argc, char const *argv[]) {
   if(argc>1) n_children_per_node = std::stoi(argv[1]);
   if(argc>2) levels = std::stoi(argv[2]);
   create_simple_tree(root,n_children_per_node,levels);
+  printf("**************, Leaves = %ld*******\n", leafnodes.size());
 
   //Select a node to test weight addition.
   root->print();//print_tree(root);
   start = clock();
   int size = leafnodes.size();
-  for(int i=0;i<1e4*size;i++){
+  for(int i=0;i<1e2*size;i++){
     int idx = rand()%size;
       leaves_vector[idx]->add_weight(rand()*1.1e-4/RAND_MAX);
-    // if(!(i%size)) root->print();
+    if(!(i%size)) root->print();
   }
+  print_node_and_ancestors(rand()%size);
+
   stop = clock();
   printf("Time taken for add_weight = %lf(micros)\n", (1.0e6*(double)(stop-start))/CLOCKS_PER_SEC);
-  printf("**************, Leaves = %ld*******\n", leafnodes.size());
+  printf("*********************\n");
   root->print();
   // for(auto leaf : leafnodes)
     // print_tree(leaf.first);
