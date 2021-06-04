@@ -2,14 +2,21 @@
 
 int Node::id_counter = 0;
 
-float Node::get_weight(){
+/** Returns total weight for a node
+**/
+inline float Node::get_weight(){
   return self_weight+added_weight;
 }
 
+/** Returns integet unique id for a node
+**/
 int Node::get_id(){
   return node_id;
 }
 
+/** Adds weight wt to a node and rolls up to the ancestors.
+    wt: weight to be added
+**/
 bool Node::add_weight(float wt)
 {
   if(!children.empty()) return false;
@@ -17,17 +24,24 @@ bool Node::add_weight(float wt)
   return true;
 }
 
+/** Prints information of node and sub-tree under it.
+    node: pointer to Node to be printed
+**/
 void Node::rollup_weight(float wt)
 {
   added_weight+=wt;
   if(parent!=NULL) parent->rollup_weight(wt);
 }
 
+/** Prints information of a single node
+**/
 void Node::print(){
   printf("Node weight = %.2f \t", get_weight());
   printf("node id = %d\n", node_id);
 }
 
+/** Adds n children to a node initialized with random value of weights.
+**/
 void Node::add_random_children_to_node(int n){
   if(n<1) return;
   Node *new_node = new Node(rand()*1.0*MAX_WEIGHT/RAND_MAX, "India");
@@ -36,6 +50,8 @@ void Node::add_random_children_to_node(int n){
   add_random_children_to_node(--n);
 }
 
+/** Adds a single child to the node and initializes with a random
+**/
 Node* Node::add_random_child_to_node(){
   Node *new_node = new Node(rand()*1.0*MAX_WEIGHT/RAND_MAX, "India");
   new_node->parent = this;
@@ -43,6 +59,10 @@ Node* Node::add_random_child_to_node(){
   return new_node;
 }
 
+/** Adds n children to a node initialized with weight if init_wt.
+    n: number of children to add.
+    init_wt: initial weight for the children.
+**/
 void Node::add_children_to_node(int n, float init_wt){
   while(n--){
     Node *new_node = new Node(init_wt, "India");
@@ -51,6 +71,11 @@ void Node::add_children_to_node(int n, float init_wt){
   }
 }
 
+/** Create a simple saturated tree structure from a single root node.
+    root: pointer to root Node of the tree to be created.
+    n_children_per_node: number of children of each node in the print_tree.
+    levels: number of levels to be added in the tree.
+**/
 void create_simple_tree(Node* root, int n_children_per_node, int levels){
   if (levels>0){
     for(int i=0;i<n_children_per_node;i++){
@@ -78,6 +103,9 @@ void create_simple_tree(Node* root, int n_children_per_node, int levels){
   }
 }
 
+/** Prints information of node and sub-tree under it.
+    node: pointer to Node to be printed
+**/
 void print_tree(Node* node){
   if(!node)
     return;
@@ -87,6 +115,9 @@ void print_tree(Node* node){
     print_tree(child);
 }
 
+/** Prints the weight of a leaf node and all its ancestors.
+    leaf_idx: index of leaf node in the leafnodes vector to be printed.
+**/
 void print_node_and_ancestors(int leaf_idx){  //Leaf function
   std::string name_of_node="";
   for(auto l : ancestor_of_leaves[leaf_idx]){
@@ -96,7 +127,11 @@ void print_node_and_ancestors(int leaf_idx){  //Leaf function
   }
 }
 
-void deposit_weights_to_ancestors(int lead_node_idx, float wt){ //Leaf function
+/** Adds a weight to leaf node all its ancestor.
+    leaf_idx: index of leaf node in the leafnodes vector to which weight is added.
+    wt: weight that needs to be added
+**/
+inline void deposit_weights_to_ancestors(int lead_node_idx, float wt){ //Leaf function
   //this type of loop is vetorization friendly. For MIMD *p could be 'gathered' over all threads before updating values.
   for(float* p : ancestor_weights_of_leaves[lead_node_idx]){
     *p = *p + wt;
@@ -127,10 +162,9 @@ int main(int argc, char const *argv[]) {
       leaves_vector[idx]->add_weight(rand()*1.1e-4/RAND_MAX);
     if(!(i%size)) root->print();
   }
-  print_node_and_ancestors(rand()%size);
-
   stop = clock();
   printf("Time taken for add_weight = %lf(micros)\n", (1.0e6*(double)(stop-start))/CLOCKS_PER_SEC);
+  print_node_and_ancestors(rand()%size);
   printf("*********************\n");
   root->print();
   // for(auto leaf : leafnodes)
